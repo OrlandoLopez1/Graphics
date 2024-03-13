@@ -7,7 +7,9 @@ class Camera : public SceneObject {
 public:
     Camera(glm::vec3 position, glm::vec3 target);
     virtual ~Camera();
-    const glm::mat4 getViewMatrix();
+    const glm::mat4 get_view_matrix();
+    const glm::vec3 get_position();
+    const glm::vec3 get_direction();
 
 protected:
     glm::vec3 target{};
