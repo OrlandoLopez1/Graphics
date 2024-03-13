@@ -5,9 +5,14 @@ const glm::mat4 Camera::getViewMatrix() {
     return glm::lookAt(this->position, this->target, up);
 }
 
-Camera::Camera(glm::vec3 position, glm::vec3 target, glm::vec3 direction) {
+Camera::Camera(glm::vec3 position, glm::vec3 target) {
     this->position = position;
     this->target = target;
-    this->direction = direction;
+    this->direction = glm::normalize(position - target) ;
+
+}
+
+Camera::~Camera() {
+
 }
 

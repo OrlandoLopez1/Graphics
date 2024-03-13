@@ -4,7 +4,8 @@
 #include "SceneObject.h"
 
 class Camera : public SceneObject {
-    Camera(glm::vec3 position, glm::vec3 target, glm::vec3 direction);
+public:
+    Camera(glm::vec3 position, glm::vec3 target);
     virtual ~Camera();
     const glm::mat4 getViewMatrix();
 
