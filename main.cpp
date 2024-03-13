@@ -14,6 +14,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <GLFW/glfw3.h>
 #include "Camera.h"
+#include "Shader.h"
 
 using namespace std;
 
@@ -25,11 +26,11 @@ string read_from_file(const string& file_path);
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
-string vertexShaderCode = read_from_file("../shaders/test.vert");
-const char* vertexShaderSource = vertexShaderCode.c_str();
-
-string fragmentShaderCode = read_from_file("../shaders/test.frag");
-const char* fragmentShaderSource = fragmentShaderCode.c_str();
+//string vertexShaderCode = read_from_file("../shaders/test.vert");
+//const char* vertexShaderSource = vertexShaderCode.c_str();
+//
+//string fragmentShaderCode = read_from_file("../shaders/test.frag");
+//const char* fragmentShaderSource = fragmentShaderCode.c_str();
 
 
 int main()
@@ -61,45 +62,6 @@ int main()
     glEnable(GL_DEPTH_TEST);
 
 
-    // build and compile our shader program
-    // ------------------------------------
-    // vertex shader
-    unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-    glCompileShader(vertexShader);
-    // check for shader compile errors
-    int success;
-    char infoLog[512];
-    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-    if (!success)
-    {
-        glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
-    }
-    // fragment shader
-    unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-    glCompileShader(fragmentShader);
-    // check for shader compile errors
-    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-    if (!success)
-    {
-        glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
-    }
-    // link shaders
-    unsigned int shaderProgram = glCreateProgram();
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-    glLinkProgram(shaderProgram);
-    // check for linking errors
-    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-    if (!success) {
-        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
-    }
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
 
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
@@ -109,6 +71,9 @@ int main()
 //            -0.5f, -0.5f, 0.0f,  // bottom left
 //            -0.5f,  0.5f, 0.0f   // top left
 //    };
+
+    Shader lightingShader("../shaders/colors.vert", "../shaders/colors.frag");
+    Shader lightCubeShader("../shaders/light_cube.vert", "../shaders/light_cube.frag");
 
     float vertices[] = {
             -0.5f, -0.5f, -0.5f,
@@ -157,47 +122,41 @@ int main()
 //            0, 1, 3,  // first Triangle
 //            1, 2, 3   // second Triangle
 //    };
-    unsigned int VBO, VAO, EBO;
-    glGenVertexArrays(1, &VAO);
+    // first, configure the cube's VAO (and VBO)
+    unsigned int VBO, cubeVAO;
+    glGenVertexArrays(1, &cubeVAO);
     glGenBuffers(1, &VBO);
-//    glGenBuffers(1, &EBO);
-    // bind the Vertex Array Object first, then bind and set vertex buffer(s), and then configure vertex attributes(s).
-    glBindVertexArray(VAO);
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-//    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-//    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+    glBindVertexArray(cubeVAO);
+
+    // position attribute
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    // second, configure the light's VAO (VBO stays the same; the vertices are the same for the light object which is also a 3D cube)
+    unsigned int lightCubeVAO;
+    glGenVertexArrays(1, &lightCubeVAO);
+    glBindVertexArray(lightCubeVAO);
+
+    // we only need to bind to the VBO (to link it with glVertexAttribPointer), no need to fill it; the VBO's data already contains all we need (it's already bound, but we do it again for educational purposes)
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
-    // note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    // remember: do NOT unbind the EBO while a VAO is active as the bound element buffer object IS stored in the VAO; keep the EBO bound.
-    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-    // You can unbind the VAO afterwards so other VAO calls won't accidentally modify this VAO, but this rarely happens. Modifying other
-    // VAOs requires a call to glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when it's not directly necessary.
-    glBindVertexArray(0);
-
-
     // uncomment this call to draw in wireframe polygons.
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+//    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
+    glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
     // todo test placement in different spots
-    Camera camera(glm::vec3(0.0f, 0.0f,  3.0f), glm::vec3(0.0f, 0.0f, -1.0f));
+    Camera camera(glm::vec3(0.0f, 5.0f,  10.0f), glm::vec3(0.0f, 0.0f, -1.0f));
     glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+
     glm::mat4 model = glm::mat4(1.0f);
     glm::mat4 view = camera.getViewMatrix();
-
-
-    unsigned int projection_loc = glGetUniformLocation(shaderProgram, "projection");
-    unsigned int view_loc = glGetUniformLocation(shaderProgram, "view");
-    unsigned int model_loc = glGetUniformLocation(shaderProgram, "model");
-
 
 
     // render loop
@@ -206,38 +165,57 @@ int main()
     {
         // input
         // -----
+        // -----
         processInput(window);
 
         // render
         // ------
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // draw our first triangle
-        glUseProgram(shaderProgram);
+        // be sure to activate shader when setting uniforms/drawing objects
+        lightingShader.use();
+        lightingShader.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
+        lightingShader.setVec3("lightColor",  1.0f, 1.0f, 1.0f);
 
-        glUniformMatrix4fv(projection_loc, 1, GL_FALSE, glm::value_ptr(projection));
-        glUniformMatrix4fv(view_loc, 1, GL_FALSE, glm::value_ptr(view));
-        glUniformMatrix4fv(model_loc, 1, GL_FALSE, glm::value_ptr(model));
+        // view/projection transformations
+        glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        glm::mat4 view = camera.getViewMatrix();
+        lightingShader.setMat4("projection", projection);
+        lightingShader.setMat4("view", view);
 
-        glBindVertexArray(VAO); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
+        // world transformation
+        glm::mat4 model = glm::mat4(1.0f);
+        lightingShader.setMat4("model", model);
+
+        // render the cube
+        glBindVertexArray(cubeVAO);
         glDrawArrays(GL_TRIANGLES, 0, 36);
-//        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-        // glBindVertexArray(0); // no need to unbind it every time
+
+
+        // also draw the lamp object
+        lightCubeShader.use();
+        lightCubeShader.setMat4("projection", projection);
+        lightCubeShader.setMat4("view", view);
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, lightPos);
+        model = glm::scale(model, glm::vec3(0.2f)); // a smaller cube
+        lightCubeShader.setMat4("model", model);
+
+        glBindVertexArray(lightCubeVAO);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
         glfwSwapBuffers(window);
-        glfwPollEvents();
-    }
+        glfwPollEvents();    }
 
     // optional: de-allocate all resources once they've outlived their purpose:
     // ------------------------------------------------------------------------
-    glDeleteVertexArrays(1, &VAO);
+    glDeleteVertexArrays(1, &cubeVAO);
+    glDeleteVertexArrays(1, &lightCubeVAO);
     glDeleteBuffers(1, &VBO);
-//    glDeleteBuffers(1, &EBO);
-    glDeleteProgram(shaderProgram);
-
     // glfw: terminate, clearing all previously allocated GLFW resources.
     // ------------------------------------------------------------------
     glfwTerminate();
@@ -259,18 +237,4 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
     // make sure the viewport matches the new window dimensions; note that width and
     // height will be significantly larger than specified on retina displays.
     glViewport(0, 0, width, height);
-}
-
-// inspired from https://stackoverflow.com/questions/2602013/read-whole-ascii-file-into-c-stdstring
-string read_from_file(const string& file_path)
-{
-    ifstream t(file_path);
-    if (!t.is_open()) {
-        cerr << "Failed to open file: " << file_path << endl;
-        return "";
-    }
-    stringstream buffer;
-    buffer << t.rdbuf();
-    string result = buffer.str();
-    return result;
 }

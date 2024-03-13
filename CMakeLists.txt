@@ -13,6 +13,7 @@ add_executable(Graphics
         SceneObject.h
         Camera.cpp
         Camera.h
+        Shader.h
 )
 
 
