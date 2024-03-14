@@ -16,9 +16,6 @@ Camera::~Camera() {
 
 }
 
-const glm::vec3 Camera::get_position() {
-    return position;
-}
 
 const glm::vec3 Camera::get_direction() {
     return direction;

@@ -11,3 +11,7 @@ SceneObject::SceneObject() {
 SceneObject::~SceneObject() {
 
 }
+
+const glm::vec3 SceneObject::get_position() {
+    return position;
+}

@@ -15,7 +15,7 @@
 #include <GLFW/glfw3.h>
 #include "Camera.h"
 #include "Shader.h"
-
+#include "Light.h"
 using namespace std;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -26,10 +26,10 @@ string read_from_file(const string& file_path);
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
-//string vertexShaderCode = read_from_file("../shaders/test.vert");
+//string vertexShaderCode = read_from_file("../shaders/Phong.vert");
 //const char* vertexShaderSource = vertexShaderCode.c_str();
 //
-//string fragmentShaderCode = read_from_file("../shaders/test.frag");
+//string fragmentShaderCode = read_from_file("../shaders/Phong.frag");
 //const char* fragmentShaderSource = fragmentShaderCode.c_str();
 
 
@@ -64,7 +64,7 @@ int main()
 
 
 
-    Shader lightingShader("../shaders/test.vert", "../shaders/test.frag");
+    Shader lightingShader("../shaders/Phong.vert", "../shaders/Phong.frag");
     Shader lightCubeShader("../shaders/light_cube.vert", "../shaders/light_cube.frag");
 
     // includes normals
@@ -133,7 +133,6 @@ int main()
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
-    // second, configure the light's VAO (VBO stays the same; the vertices are the same for the light object which is also a 3D cube)
     unsigned int lightCubeVAO;
     glGenVertexArrays(1, &lightCubeVAO);
     glBindVertexArray(lightCubeVAO);
@@ -149,7 +148,7 @@ int main()
 
     glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
     // todo test placement in different spots
-    Camera camera(glm::vec3(0.0f, 5.0f,  10.0f), glm::vec3(0.0f, 0.0f, -1.0f));
+    Camera camera(glm::vec3(0.0f, 0.0f,  3.0f), glm::vec3(0.0f, 0.0f, -1.0f));
     glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
 
     glm::mat4 model = glm::mat4(1.0f);
@@ -171,11 +170,12 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // be sure to activate shader when setting uniforms/drawing objects
+        Light light(glm::vec3(1.0f, 1.0f, 1.0f));
         lightingShader.use();
-        lightingShader.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
-        lightingShader.setVec3("lightColor",  1.0f, 1.0f, 1.0f);
-        lightingShader.setVec3("lightPos", lightPos);
-        lightingShader.setVec3("viewPos", camera.get_position());
+        lightingShader.setVec3("u_objectColor", 1.0f, 0.5f, 0.31f);
+        lightingShader.setVec3("u_lightColor",  1.0f, 1.0f, 1.0f);
+        lightingShader.setVec3("u_lightPos", lightPos);
+        lightingShader.setVec3("u_viewPos", camera.get_position());
 
         // view/projection transformations
         glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);

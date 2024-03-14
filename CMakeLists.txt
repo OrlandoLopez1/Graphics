@@ -14,6 +14,8 @@ add_executable(Graphics
         Camera.cpp
         Camera.h
         Shader.h
+        Light.cpp
+        Light.h
 )
 
 
