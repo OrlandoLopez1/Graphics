@@ -26,12 +26,6 @@ string read_from_file(const string& file_path);
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
-//string vertexShaderCode = read_from_file("../shaders/Phong.vert");
-//const char* vertexShaderSource = vertexShaderCode.c_str();
-//
-//string fragmentShaderCode = read_from_file("../shaders/Phong.frag");
-//const char* fragmentShaderSource = fragmentShaderCode.c_str();
-
 
 int main()
 {
@@ -64,7 +58,8 @@ int main()
 
 
 
-    Shader lightingShader("../shaders/Phong.vert", "../shaders/Phong.frag");
+//    Shader lightingShader("../shaders/Phong.vert", "../shaders/Phong.frag");
+    Shader lightingShader("../shaders/PointLight.vert", "../shaders/PointLight.frag");
     Shader lightCubeShader("../shaders/light_cube.vert", "../shaders/light_cube.frag");
 
     // includes normals
@@ -147,8 +142,8 @@ int main()
 //    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
-    // todo test placement in different spots
-    Camera camera(glm::vec3(0.0f, 0.0f,  3.0f), glm::vec3(0.0f, 0.0f, -1.0f));
+    glm::vec3 lightDir(-0.2f, -1.0f, -0.3f);
+    Camera camera(glm::vec3(0.0f, 5.0f,  10.0f), glm::vec3(0.0f, 0.0f, -1.0f));
     glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
 
     glm::mat4 model = glm::mat4(1.0f);
@@ -170,11 +165,15 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // be sure to activate shader when setting uniforms/drawing objects
-        Light light(glm::vec3(1.0f, 1.0f, 1.0f));
+        Light light(glm::vec3(1.0f, 1.0f, 1.0f), 1.0f, 0.09f, 0.032f);
         lightingShader.use();
         lightingShader.setVec3("u_objectColor", 1.0f, 0.5f, 0.31f);
         lightingShader.setVec3("u_lightColor",  1.0f, 1.0f, 1.0f);
         lightingShader.setVec3("u_lightPos", lightPos);
+        lightingShader.setFloat("u_constant", light.get_constant());
+        lightingShader.setFloat("u_linear", light.get_linear());
+        lightingShader.setFloat("u_quadratic", light.get_quadratic());
+//        lightingShader.setVec3("u_lightDir", lightDir);
         lightingShader.setVec3("u_viewPos", camera.get_position());
 
         // view/projection transformations

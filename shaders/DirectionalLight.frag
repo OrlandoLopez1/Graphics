@@ -5,7 +5,8 @@ out vec4 FragColor;
 
 uniform vec3 u_objectColor;
 uniform vec3 u_lightColor;
-uniform vec3 u_lightPos;
+//uniform vec3 u_lightPos;
+uniform vec3 u_lightDir;
 uniform vec3 u_viewPos;
 
 void main()
@@ -16,7 +17,8 @@ void main()
 
     // Remember to always normalize vectors for light calculations
     vec3 norm = normalize(Normal);
-    vec3 lightDir = normalize(u_lightPos - FragPos);
+    // Light pointing from the source
+    vec3 lightDir = normalize(-u_lightDir);
 
     float diffuseFactor = max(dot(norm, lightDir), 0.0); // max ensures no negative
     vec3 diffuse = diffuseFactor * u_lightColor;

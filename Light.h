@@ -1,7 +1,3 @@
-//
-// Created by lando on 3/13/24.
-//
-
 #ifndef GRAPHICS_LIGHT_H
 #define GRAPHICS_LIGHT_H
 
@@ -9,12 +5,30 @@
 
 class Light : public SceneObject {
 public:
-    Light(glm::vec3 color);
+    Light(glm::vec3 color_, float constant, float linear, float quadratic);
     virtual ~Light();
 
     glm::vec3 get_color();
+    glm::vec3 get_direction();
+    void set_direction(glm::vec3 direction_);
+
+    float get_constant() const;
+    void set_constant(float constant_);
+    float get_linear() const;
+    void set_linear(float linear_);
+    float get_quadratic() const;
+    void set_quadratic(float quadratic_);
 protected:
+    glm::vec3 direction;
     glm::vec3 color;
+    glm::vec3 ambient;
+    glm::vec3 diffuse;
+    glm::vec3 specular;
+
+    float constant;
+    float linear;
+    float quadratic;
+
 };
 
 

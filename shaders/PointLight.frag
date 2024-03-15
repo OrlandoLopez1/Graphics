@@ -7,6 +7,9 @@ uniform vec3 u_objectColor;
 uniform vec3 u_lightColor;
 uniform vec3 u_lightPos;
 uniform vec3 u_viewPos;
+uniform float u_constant;
+uniform float u_linear;
+uniform float u_quadratic;
 
 void main()
 {
@@ -28,6 +31,13 @@ void main()
     // 32 is the shininess value, the greater it is, the better it reflects lights instead of scattering
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), 2);
     vec3 specular = specularStrength * spec * u_lightColor;
+
+    float distance = length(u_lightPos - FragPos);
+    float attenuation = 1.0 / (u_constant + u_linear * distance + u_quadratic * (distance * distance));
+
+    ambient  *= attenuation;
+    diffuse  *= attenuation;
+    specular *= attenuation;
 
     vec3 result = (ambient + diffuse + specular) * u_objectColor;
     FragColor = vec4(result, 1.0);
