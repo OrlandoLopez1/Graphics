@@ -144,7 +144,7 @@ int main()
 
     glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
 //    glm::vec3 lightDir(-0.2f, -1.0f, -0.3f);
-    Camera camera(glm::vec3(0.5f, 0.0f, 2.0f), glm::vec3(0.0f, 0.0f, -1.0f));
+    Camera camera(glm::vec3(1.0f, 0.0f, 5.0f), glm::vec3(0.0f, 0.0f, -1.0f));
     glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
 
     glm::mat4 model = glm::mat4(1.0f);
@@ -167,14 +167,20 @@ int main()
 
         // be sure to activate shader when setting uniforms/drawing objects
 //        Light light(glm::vec3(1.0f, 1.0f, 1.0f), 1.0f, 0.09f, 0.032f);
-        Spotlight spotlight(glm::vec3(), camera.get_position(), glm::vec3(0.0f, 0.0f, -1.0f), glm::cos(glm::radians(12.5f)));
+        Spotlight spotlight(glm::vec3(), camera.get_position(), glm::vec3(0.0f, 0.0f, -1.0f),
+                            glm::cos(glm::radians(12.5f)), glm::cos(glm::radians(17.5f)));
 
         lightingShader.use();
         lightingShader.setVec3("u_objectColor", 1.0f, 0.5f, 0.31f);
         lightingShader.setVec3("u_lightColor",  1.0f, 1.0f, 1.0f);
         lightingShader.setVec3("u_lightPos", spotlight.get_position());
         lightingShader.setVec3("u_lightDir", spotlight.get_direction());
-        lightingShader.setFloat("u_cutOff", spotlight.get_cut_off());
+        lightingShader.setFloat("u_constant", spotlight.get_constant());
+        lightingShader.setFloat("u_linear", spotlight.get_linear());
+        lightingShader.setFloat("u_quadratic", spotlight.get_quadratic());
+
+        lightingShader.setFloat("u_innerCutoff", spotlight.get_inner_cut_off());
+        lightingShader.setFloat("u_outerCutoff", spotlight.get_outer_cut_off());
         lightingShader.setVec3("u_viewPos", camera.get_position());
 
         // view/projection transformations

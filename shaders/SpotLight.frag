@@ -8,7 +8,11 @@ uniform vec3 u_lightColor;
 uniform vec3 u_lightPos;
 uniform vec3 u_lightDir;
 uniform vec3 u_viewPos;
-uniform float u_cutOff;
+uniform float u_constant;
+uniform float u_linear;
+uniform float u_quadratic;
+uniform float u_innerCutoff;
+uniform float u_outerCutoff;
 
 void main()
 {
@@ -20,25 +24,31 @@ void main()
     vec3 norm = normalize(Normal);
     vec3 lightDir = normalize(u_lightPos - FragPos);
 
+    float diffuseFactor = max(dot(norm, lightDir), 0.0); // max ensures no negative
+    vec3 diffuse = diffuseFactor * u_lightColor;
+
+    float specularStrength = 0.5;
+    vec3 viewDir = normalize(u_viewPos - FragPos);
+    // negate lightDir to make sure the vector is from the fragment towards the light
+    vec3 reflectDir = reflect(-lightDir, norm);
+    // 32 is the shininess value, the greater it is, the better it reflects lights instead of scattering
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 2);
+    vec3 specular = specularStrength * spec * u_lightColor;
+
+
     float theta = dot(lightDir, normalize(-u_lightDir));
-    if (theta > u_cutOff) {
-        float diffuseFactor = max(dot(norm, lightDir), 0.0); // max ensures no negative
-        vec3 diffuse = diffuseFactor * u_lightColor;
+    float epsilon   = u_innerCutoff - u_outerCutoff;
+    float intensity = clamp((theta - u_outerCutoff) / epsilon, 0.0, 1.0);
+    diffuse *= intensity;
+    specular *= intensity;
 
-        float specularStrength = 0.5;
-        vec3 viewDir = normalize(u_viewPos - FragPos);
-        // negate lightDir to make sure the vector is from the fragment towards the light
-        vec3 reflectDir = reflect(-lightDir, norm);
-        // 32 is the shininess value, the greater it is, the better it reflects lights instead of scattering
-        float spec = pow(max(dot(viewDir, reflectDir), 0.0), 2);
-        vec3 specular = specularStrength * spec * u_lightColor;
+    float distance = length(u_lightPos - FragPos);
+    float attenuation = 1.0 / (u_constant + u_linear * distance + u_quadratic * (distance * distance));
 
-        vec3 result = (ambient + diffuse + specular) * u_objectColor;
-        FragColor = vec4(result, 1.0);
-    }
-    else {
-        vec3 result = ambient * u_objectColor;
-        FragColor = vec4(result, 1.0);
-    }
+    ambient  *= attenuation;
+    diffuse  *= attenuation;
+    specular *= attenuation;
 
+    vec3 result = (ambient + diffuse + specular) * u_objectColor;
+    FragColor = vec4(result, 1.0);
 }

@@ -16,7 +16,6 @@ add_executable(Graphics
         Shader.h
         Light.cpp
         Light.h
-        PointLight.h
         Spotlight.cpp
         Spotlight.h
 )
