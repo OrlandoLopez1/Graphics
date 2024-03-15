@@ -16,6 +16,7 @@
 #include "Camera.h"
 #include "Shader.h"
 #include "Light.h"
+#include "Spotlight.h"
 using namespace std;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -59,7 +60,7 @@ int main()
 
 
 //    Shader lightingShader("../shaders/Phong.vert", "../shaders/Phong.frag");
-    Shader lightingShader("../shaders/PointLight.vert", "../shaders/PointLight.frag");
+    Shader lightingShader("../shaders/PointLight.vert", "../shaders/SpotLight.frag");
     Shader lightCubeShader("../shaders/light_cube.vert", "../shaders/light_cube.frag");
 
     // includes normals
@@ -142,8 +143,8 @@ int main()
 //    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
-    glm::vec3 lightDir(-0.2f, -1.0f, -0.3f);
-    Camera camera(glm::vec3(0.0f, 5.0f,  10.0f), glm::vec3(0.0f, 0.0f, -1.0f));
+//    glm::vec3 lightDir(-0.2f, -1.0f, -0.3f);
+    Camera camera(glm::vec3(0.5f, 0.0f, 2.0f), glm::vec3(0.0f, 0.0f, -1.0f));
     glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
 
     glm::mat4 model = glm::mat4(1.0f);
@@ -165,15 +166,15 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // be sure to activate shader when setting uniforms/drawing objects
-        Light light(glm::vec3(1.0f, 1.0f, 1.0f), 1.0f, 0.09f, 0.032f);
+//        Light light(glm::vec3(1.0f, 1.0f, 1.0f), 1.0f, 0.09f, 0.032f);
+        Spotlight spotlight(glm::vec3(), camera.get_position(), glm::vec3(0.0f, 0.0f, -1.0f), glm::cos(glm::radians(12.5f)));
+
         lightingShader.use();
         lightingShader.setVec3("u_objectColor", 1.0f, 0.5f, 0.31f);
         lightingShader.setVec3("u_lightColor",  1.0f, 1.0f, 1.0f);
-        lightingShader.setVec3("u_lightPos", lightPos);
-        lightingShader.setFloat("u_constant", light.get_constant());
-        lightingShader.setFloat("u_linear", light.get_linear());
-        lightingShader.setFloat("u_quadratic", light.get_quadratic());
-//        lightingShader.setVec3("u_lightDir", lightDir);
+        lightingShader.setVec3("u_lightPos", spotlight.get_position());
+        lightingShader.setVec3("u_lightDir", spotlight.get_direction());
+        lightingShader.setFloat("u_cutOff", spotlight.get_cut_off());
         lightingShader.setVec3("u_viewPos", camera.get_position());
 
         // view/projection transformations
@@ -192,16 +193,16 @@ int main()
 
 
         // also draw the lamp object
-        lightCubeShader.use();
-        lightCubeShader.setMat4("projection", projection);
-        lightCubeShader.setMat4("view", view);
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, lightPos);
-        model = glm::scale(model, glm::vec3(0.2f)); // a smaller cube
-        lightCubeShader.setMat4("model", model);
-
-        glBindVertexArray(lightCubeVAO);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
+//        lightCubeShader.use();
+//        lightCubeShader.setMat4("projection", projection);
+//        lightCubeShader.setMat4("view", view);
+//        model = glm::mat4(1.0f);
+//        model = glm::translate(model, lightPos);
+//        model = glm::scale(model, glm::vec3(0.2f)); // a smaller cube
+//        lightCubeShader.setMat4("model", model);
+//
+//        glBindVertexArray(lightCubeVAO);
+//        glDrawArrays(GL_TRIANGLES, 0, 36);
 
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
